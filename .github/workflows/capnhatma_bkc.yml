@@ -1,0 +1,71 @@
+#update 6h40 12h40
+name: Cap nhat ma bkc
+
+on: 
+  release:
+    types: [published]
+  push:
+    tags:
+    - 'v*'
+  #  branches: 
+  #    - master
+  schedule:
+    - cron: '40 5,11,17,23 * * *'
+  watch:
+    types: [started]
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Cai dat Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Cai module requests
+      run: |
+        pip install requests
+    - name: Lay thong tin cau hinh rieng
+      env: 
+        CONFIG_ID: ${{ secrets.CONFIG_ID }}
+        CONFIG_KEY: ${{ secrets.CONFIG_KEY }}
+        CONFIG_URLRED: ${{ secrets.CONFIG_URLRED }}
+        CONFIG_URLXT: ${{ secrets.CONFIG_URLXT }}
+        CONFIG_TYPE: ${{ secrets.CONFIG_TYPE }}
+      run: | 
+        cp capnhatma.py capnhatma2.py
+        echo $CONFIG_ID > idapp.txt
+        echo $CONFIG_KEY > keyapp.txt
+        echo $CONFIG_URLRED > urlredapp.txt
+        echo $CONFIG_URLXT > urlxtapp.txt
+        echo $CONFIG_TYPE > typeapp.txt
+        sed -i '10 r idapp.txt' capnhatma2.py
+        sed -i '12 r keyapp.txt' capnhatma2.py
+        sed -i '14 r urlredapp.txt' capnhatma2.py
+        sed -i '16 r urlxtapp.txt' capnhatma2.py
+        sed -i '18 r typeapp.txt' capnhatma2.py
+    - name: Cap nhat ma ngau nhien
+      run: | 
+        echo `date +"%Y-%m-%d %H:%M:%S"` begin > thoigian.log
+        python capnhatma2.py
+    - name: Xoa thong tin cau hinh rieng
+      run: | 
+        rm -f capnhatma2.py
+        rm -f idapp.txt
+        rm -f keyapp.txt
+        rm -f urlredapp.txt
+        rm -f urlxtapp.txt
+        rm -f typeapp.txt
+    - name: Gui thong tin cap nhat
+      run: |
+        git config --global user.email rabip161acc@gmail.com
+        git config --global user.name rb161
+        git add .
+        git commit -m "cap nhat ma bkc" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
